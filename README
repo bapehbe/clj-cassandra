@@ -4,7 +4,7 @@ I take a different approach to implement it, so it does not share any code with 
 
 Usage:
 
-(use ['cassandra.client)
+(use 'cassandra.client)
 
 (def client (cdb/mk-client "localhost" 9160))
 (def ks (mk-keyspace client "Keyspace1"))
