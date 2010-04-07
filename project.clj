@@ -1,6 +1,5 @@
-(defproject clojure-cassandra "0.6.0"
+(defproject clj-cassandra "0.6.0"
   :description "Clojure client for Apache Cassandra"
-  :repositories [["clojure" "http://build.clojure.org/releases/"]]
   :dependencies [[org.clojure/clojure-contrib "1.1.0"]
 		 [org.apache.cassandra/cassandra "0.6.0-beta2"]
 		 [org.apache.thrift/thrift "r894924"]
