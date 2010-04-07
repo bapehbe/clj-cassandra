@@ -19,7 +19,7 @@
 	  (transport [] t)
 	  (close [] (.close t))))))
 
-(defn mk-keyspace
+(defn key-space
   "Make a client connection and keyspace-name to specify a keyspace.
    Options include: :decoder and :encoder to override the default encode/decode function.
    r-level and w-level for read-level and write-level of the database."
@@ -35,7 +35,7 @@
      :read-level (translate-level r-level)
      :write-level (translate-level w-level)}))
 
-(defn mk-cf
+(defn column-family
   "Use a keyspace specification ks and column family name cf-name to 
    specify a column family (aka database table)"
   [ks cf-name]
@@ -94,7 +94,7 @@
   "Get attributes attr-names of multiple pks in column family cf-spec."
   [cf-spec pks attr-names]
   (let [{:keys [#^Cassandra$Client client encoder decoder read-level name cf]} cf-spec
-	sp (mk-slice-pred encoder attr-names)
+	sp (mk-names-pred encoder attr-names)
 	cp (column-parent encoder cf nil)
 	rst (.multiget_slice client name pks cp sp read-level)]
     (into {} (for [[pk cscs] rst]
@@ -102,8 +102,8 @@
 
 (defn get-attrs
   "Get attributes of a range specified by range-spec of pk in cf-spec."
-  [cf-spec pk & range-spec]
-  (get-slice* cf-spec pk (apply mk-slice-range range-spec)))
+  [{encoder :encoder :as cf-spec} pk range-spec]
+  (get-slice* cf-spec pk (mk-names-pred encoder range-spec)))
 
 (defn set-attr!
   "Set the attribute of column col of pk in cf-spec"

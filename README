@@ -2,16 +2,27 @@ Cassandra clojure client library.
 Inspired by clojure-cassandra project, while support new version of Cassandra (0.6.0-beta2).
 I take a different approach to implement it, so it does not share any code with clojure-cassandra project.
 
-Usage:
+== Usage ==
 
 (use 'cassandra.client)
 
-(def client (cdb/mk-client "localhost" 9160))
-(def ks (mk-keyspace client "Keyspace1"))
-(def cf (mk-cf ks "Standard1"))
+(def table (-> (mk-client "localhost" 9160)
+	       (key-space "Keyspace1")
+	       (column-family "Standard1")))
 
 ;; Get Attribute
-(get-attr cf "foo")
+(get-attr table "foo")
 
 ;; Set attribute
-(set-attr! cf "foo" :hello "world!")
+(set-attr! table "foo" :hello "world!")
+
+;;Get Attributes (batch)
+(get-attrs table "foo" [:foo :bar])
+
+;;Set Attributes (Using Cassandra 0.6's batch mutation)
+(set-attrs! table "foo" {:foo "?" :bar "!"})
+
+== TODO ==
+* Row remove
+* Inverted index
+* Map-reduce (?)
