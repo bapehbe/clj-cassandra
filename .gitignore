@@ -1,5 +1,6 @@
 .DS_Store
 *.jar
+pom.xml
 .#*
 classes/
 lib/

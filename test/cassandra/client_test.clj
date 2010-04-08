@@ -8,6 +8,12 @@
 	       (key-space "Keyspace1")
 	       (column-family "Standard1")))
 
+(defn clean-foo [t]
+  (t)
+  (remove-attr table "foo"))
+
+(use-fixtures :each clean-foo)
+
 (deftest set-get-cycle
   (testing "Single attribute get and set cycle"
     (are [attr-name attr-value]
@@ -20,6 +26,7 @@
     (are [attrs]
 	 (= (do
 	      (set-attrs! table "foo" attrs)
-	      (get-attrs table "foo" (keys attrs))) attrs)
+	      (get-attrs table "foo" {:column-names (keys attrs)}))
+	    attrs)
 	 {:hello "world", 1 [3 5]})))
 	 

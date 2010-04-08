@@ -121,6 +121,12 @@
 	   pred (SlicePredicate.)]
        (.setSlice_range pred range))))
 
+(defn mk-slice-pred
+  [encoder {column-names :column-names :as pred-spec}]
+  (if column-names
+    (mk-names-pred encoder column-names)
+    (mk-range-pred encoder pred-spec)))
+
 (defn mk-mutation
   [key val encoder timestamp]
   (let [clm (wrap-obj key val encoder timestamp)]

@@ -101,9 +101,13 @@
 	       [pk (into {} (map #(extract-csc % decoder) cscs))]))))
 
 (defn get-attrs
-  "Get attributes of a range specified by range-spec of pk in cf-spec."
-  [{encoder :encoder :as cf-spec} pk range-spec]
-  (get-slice* cf-spec pk (mk-names-pred encoder range-spec)))
+  "Get attributes of pk."
+  ([cf-spec primary-key]
+     (get-attrs cf-spec primary-key {}))
+  ([cf-spec primary-key attr-spec]
+     (let [{encoder :encoder} cf-spec
+	   {:keys [column-names name-start name-end count reverse]} attr-spec]
+       (get-slice* cf-spec primary-key (mk-slice-pred encoder attr-spec)))))
 
 (defn set-attr!
   "Set the attribute of column col of pk in cf-spec"
@@ -134,3 +138,11 @@
 		    (mk-mutation k v encoder timestamp))]
     (batch-mutate* cf-spec pk mutations)))
 
+(defn remove-attr
+  "Remove attributes or entire key"
+  ([cf-spec primary-key]
+     (remove-attr cf-spec primary-key nil nil))
+  ([cf-spec primary-key super-column column-name]
+     (let [{:keys [#^Cassandra$Client client name cf encoder w-level]} cf-spec
+	   cp (column-path encoder cf super-column column-name)]
+       (.remove client name primary-key cp (now) w-level))))
