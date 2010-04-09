@@ -1,6 +1,22 @@
 Cassandra clojure client library.
-Inspired by clojure-cassandra project, while support new version of Cassandra (0.6.0-beta2).
+Inspired by clojure-cassandra project, while support new version of Cassandra (0.6.0-rc1).
 I take a different approach to implement it, so it does not share any code with clojure-cassandra project.
+
+== Idea ==
+Treat key space as database.
+Treat column family as table.
+Treat a table as a 2-dimension key-value store.
+
+for instance,
+   in table "planet", "earth" has attributes, such as "radius": 3000, "countries": 200.
+
+   so, you can get- and set- attribute(s) of a primary key.
+
+== Caution ==
+To support TimeUUID ordering in Cassandra (http://wiki.apache.org/cassandra/FAQ#working_with_timeuuid_in_java),
+I use the mentioned uuid library, while it does not exist in well known maven repositories, you may need to download it
+manually.
+If you do not care about the TimeUUID things, just ignore the library.
 
 == Usage ==
 
@@ -23,6 +39,5 @@ I take a different approach to implement it, so it does not share any code with 
 (set-attrs! table "foo" {:foo "?" :bar "!"})
 
 == TODO ==
-* Row remove
 * Inverted index
 * Map-reduce (?)

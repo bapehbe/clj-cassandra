@@ -28,5 +28,15 @@
 	      (set-attrs! table "foo" attrs)
 	      (get-attrs table "foo" {:column-names (keys attrs)}))
 	    attrs)
+	 {:foo {:bar "ok", "3" 5}}
 	 {:hello "world", 1 [3 5]})))
-	 
+
+(deftest adding-collection
+  (testing "Add collection of attributes into the database"
+    (are [coll]
+	 (= (do
+	      (add-collection! table "foo" coll)
+	      (vals (get-collection table "foo")))
+	    coll)
+	 [{:hello "world", :ok ":-)"}
+	  {:hello "moon", :ok ":-("}])))

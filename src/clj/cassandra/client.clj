@@ -4,7 +4,8 @@
   (:import [org.apache.thrift.transport TSocket]
 	   [org.apache.thrift.protocol TBinaryProtocol]
 	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn
-	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate]))
+	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate]
+	   [cassandra TimeUUID]))
 
 (defn mk-client
   "Make a closeable Cassandra client connection to the db.
@@ -26,6 +27,7 @@
   [client keyspace-name & [options]]
   (let [decoder (get options :decoder decode)
 	encoder (get options :encoder encode)
+	key-decoder (get options :key-decoder decode)
 	r-level (get options :read-level :quorum)
 	w-level (get options :write-level :quorum)]
     {:client client
@@ -40,6 +42,13 @@
    specify a column family (aka database table)"
   [ks cf-name]
   (assoc ks :cf cf-name))
+
+(defn mk-cf-spec
+  "Make a column-family specification in one shot."
+  [host port key-space-name column-family-name & [options]]
+  (-> (mk-client host port)
+      (key-space key-space-name options)
+      (column-family column-family-name)))
   
 (defn keyspaces
   "List all keyspaces within a connected Cassandra cluster"
@@ -78,10 +87,11 @@
   "Get attributes of predicates of slice-pred of pk.
    Use internally."
   [cf-spec pk slice-pred]
-  (let [{:keys [#^Cassandra$Client client cf name encoder decoder read-level]} cf-spec
+  (let [{:keys [#^Cassandra$Client client cf name encoder key-decoder decoder read-level]} cf-spec
+	key-decoder (if key-decoder key-decoder decoder)
 	cp (column-parent encoder cf nil)
 	cscs (.get_slice client name pk cp slice-pred read-level)]
-    (into {} (map #(extract-csc % decoder) cscs))))
+    (into {} (map #(extract-csc % key-decoder decoder) cscs))))
 
 (defn get-slice-by-names
   "Get attributes values of attr-names of pk in a column family cf-spec."
@@ -146,3 +156,18 @@
      (let [{:keys [#^Cassandra$Client client name cf encoder w-level]} cf-spec
 	   cp (column-path encoder cf super-column column-name)]
        (.remove client name primary-key cp (now) w-level))))
+
+(defn get-collection
+  "Get attributes of primary-key from cf-spec, treat the key as Timed UUID."
+  ([cf-spec primary-key]
+     (get-collection cf-spec primary-key {}))
+  ([cf-spec primary-key slice-spec]
+     (get-attrs (assoc cf-spec :key-decoder uuid-decode) primary-key slice-spec)))
+
+(defn add-collection!
+  "Add element of coll to primary-key of cf-spec, with their key as Timed UUID,
+   returns the generated uuids."
+  [cf-spec primary-key coll]
+  (let [attrs (into {} (map (fn [x] [(TimeUUID/getTimeUUID) x]) coll))]
+    (set-attrs! cf-spec primary-key attrs)
+    (keys attrs)))

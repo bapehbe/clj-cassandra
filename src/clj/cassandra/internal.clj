@@ -3,7 +3,9 @@
   (:import [org.apache.thrift.transport TSocket]
 	   [org.apache.thrift.protocol TBinaryProtocol]
 	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn
-	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange]))
+	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange]
+	   [java.util UUID]
+	   [cassandra TimeUUID]))
 
 (defn get-bytes
   [#^String s]
@@ -12,12 +14,19 @@
 (defn encode
   "Default clojure encoder"
   [data]
-  (get-bytes (pr-str data)))
+  (if (instance? UUID data)
+    (TimeUUID/asByteArray data)
+    (get-bytes (pr-str data))))
 
 (defn decode
   "Default clojure decode"
   [bytes]
   (with-in-str (String. bytes "UTF-8") (read)))
+
+(defn uuid-decode
+  "Decode timed uuid"
+  [bytes]
+  (TimeUUID/toUUID bytes))
 
 (defmacro translate-level
   "Translate level keywords to thrift.
@@ -53,9 +62,10 @@
   "wrap a object to column or supercolumn"
   [key val encoder timestamp]
   (let [#^ColumnOrSuperColumn rst (ColumnOrSuperColumn.)]
-    (if (map? val)
-      (.setSuper_column rst (map-to-sc encoder key val timestamp))
-      (.setColumn rst (kv-to-column encoder key val timestamp)))))
+    ;REMIND should we support super column?
+;    (if (map? val)
+;      (.setSuper_column rst (map-to-sc encoder key val timestamp))
+    (.setColumn rst (kv-to-column encoder key val timestamp))))
 
 (defn sc-to-map
   [#^SuperColumn sc decoder]
@@ -66,12 +76,14 @@
     the-map))
 		  
 (defn extract-csc
-  [#^ColumnOrSuperColumn csc decoder]
-  (if (.isSetColumn csc)
-    (let [#^Column column (.getColumn csc)]
-      [(decoder (.getName column)) (decoder (.getValue column))])
-    (let [#^SuperColumn sc (.getSuper_column csc)]
-      [(.getName sc) (sc-to-map sc)])))
+  ([csc decoder]
+     (extract-csc csc decoder decoder))
+  ([#^ColumnOrSuperColumn csc key-decoder val-decoder]
+     (if (.isSetColumn csc)
+       (let [#^Column column (.getColumn csc)]
+	 [(key-decoder (.getName column)) (val-decoder (.getValue column))])
+       (let [#^SuperColumn sc (.getSuper_column csc)]
+	 [(key-decoder (.getName sc)) (sc-to-map sc)]))))
     
 (defn column-path
   [encoder cf super name]
