@@ -2,7 +2,7 @@
   "Represent Cassandra thrift structure by clojure data structure"
   (:import [org.apache.thrift.transport TSocket]
 	   [org.apache.thrift.protocol TBinaryProtocol]
-	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn
+	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn KeyRange
 	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange]
 	   [java.util UUID]
 	   [cassandra TimeUUID]))
@@ -144,3 +144,11 @@
   (let [clm (wrap-obj key val encoder timestamp)]
     (-> (Mutation.)
 	(.setColumn_or_supercolumn clm))))
+
+(defn mk-key-range
+  [encoder {:keys [start-key end-key count]
+ 	    :or {count 100}}]
+  (-> (KeyRange.)
+      (.setStart_key start-key)
+      (.setEnd_key end-key)
+      (.setCount count)))

@@ -4,7 +4,7 @@
   (:import [org.apache.thrift.transport TSocket]
 	   [org.apache.thrift.protocol TBinaryProtocol]
 	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn
-	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate]
+	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate NotFoundException]
 	   [cassandra TimeUUID]))
 
 (defn mk-client
@@ -79,9 +79,12 @@
      (get-attr cf pk nil column))
   ([{:keys [#^Cassandra$Client client cf name encoder decoder read-level]}
     pk super col]
-     (let [cp (column-path encoder cf super col)
-	   column (.get client name pk cp read-level)]
-       (second (extract-csc column decoder)))))
+     (try
+      (let [cp (column-path encoder cf super col)
+	    column (.. client (get name pk cp read-level) (getColumn))]
+	(decoder (.getValue column)))
+      (catch NotFoundException e nil))))
+  
 
 (defn get-slice*
   "Get attributes of predicates of slice-pred of pk.
@@ -91,7 +94,7 @@
 	key-decoder (if key-decoder key-decoder decoder)
 	cp (column-parent encoder cf nil)
 	cscs (.get_slice client name pk cp slice-pred read-level)]
-    (into {} (map #(extract-csc % key-decoder decoder) cscs))))
+    (apply array-map (mapcat #(extract-csc % key-decoder decoder) cscs))))
 
 (defn get-slice-by-names
   "Get attributes values of attr-names of pk in a column family cf-spec."
@@ -148,10 +151,10 @@
 		    (mk-mutation k v encoder timestamp))]
     (batch-mutate* cf-spec pk mutations)))
 
-(defn remove-attr
+(defn remove-attr!
   "Remove attributes or entire key"
   ([cf-spec primary-key]
-     (remove-attr cf-spec primary-key nil nil))
+     (remove-attr! cf-spec primary-key nil nil))
   ([cf-spec primary-key super-column column-name]
      (let [{:keys [#^Cassandra$Client client name cf encoder w-level]} cf-spec
 	   cp (column-path encoder cf super-column column-name)]
@@ -171,3 +174,11 @@
   (let [attrs (into {} (map (fn [x] [(TimeUUID/getTimeUUID) x]) coll))]
     (set-attrs! cf-spec primary-key attrs)
     (keys attrs)))
+
+(defn get-key-range
+  [cf-spec key-range-spec slice-spec]
+  (let [{:keys [name cf client encoder decoder r-level]} cf-spec
+	parent (column-parent encoder cf nil)
+	range (mk-key-range encoder key-range-spec)
+	slice (mk-slice-pred encoder slice-spec)]
+    (.get_range_slices client name parent slice range r-level)))
