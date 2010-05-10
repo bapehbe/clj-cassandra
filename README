@@ -25,6 +25,9 @@ If you do not care about the TimeUUID things, just ignore the library.
 (def table (-> (mk-client "localhost" 9160)
 	       (key-space "Keyspace1")
 	       (column-family "Standard1")))
+or
+
+(def table (mk-cf-spec "localhost" 9160 "keyspace1" "Standard1"))
 
 ;; Get Attribute
 (get-attr table "foo")
@@ -37,6 +40,31 @@ If you do not care about the TimeUUID things, just ignore the library.
 
 ;;Set Attributes (Using Cassandra 0.6's batch mutation)
 (set-attrs! table "foo" {:foo "?" :bar "!"})
+
+== Encoder/Decoder ==
+You can specify decoder to read data from a keyspace, and encoder on how to save it:
+
+(keyspace "Standard1" :encoder myencoder :decoder mydecoder)
+
+where encoder is a function take an object, transfer to byte[], and decoder does vice versa.
+
+By default the client use clojure reader as encoder/decoder.
+
+== Consistent level ==
+You should specify the consistent level when defining keyspace with options r-level and w-level:
+
+For instance:
+(keyspace "Standard1" :r-level :quorom :w-level :one)
+
+== Collections & TimedUUID ==
+To support order preserved collection, client use TimedUUID as column key, but it is not
+compatitable with default decoder. You must explicitly let the client know it.
+To save and load a collection, you do:
+
+(add-collection! table "foo" [{:foo "bar"} {:foo "baz"}])
+
+(get-collection table "foo")
+;; returns a map which keys are uuids, and values are the saved collection
 
 == TODO ==
 * Inverted index
