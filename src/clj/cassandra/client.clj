@@ -156,9 +156,9 @@
   ([cf-spec primary-key]
      (remove-attr! cf-spec primary-key nil nil))
   ([cf-spec primary-key super-column column-name]
-     (let [{:keys [#^Cassandra$Client client name cf encoder w-level]} cf-spec
+     (let [{:keys [#^Cassandra$Client client name cf encoder write-level]} cf-spec
 	   cp (column-path encoder cf super-column column-name)]
-       (.remove client name primary-key cp (now) w-level))))
+       (.remove client name primary-key cp (now) write-level))))
 
 (defn get-collection
   "Get attributes of primary-key from cf-spec, treat the key as Timed UUID."
@@ -177,8 +177,8 @@
 
 (defn get-key-range
   [cf-spec key-range-spec slice-spec]
-  (let [{:keys [name cf client encoder decoder r-level]} cf-spec
+  (let [{:keys [name cf client encoder decoder read-level]} cf-spec
 	parent (column-parent encoder cf nil)
 	range (mk-key-range encoder key-range-spec)
 	slice (mk-slice-pred encoder slice-spec)]
-    (.get_range_slices client name parent slice range r-level)))
+    (.get_range_slices client name parent slice range read-level)))

@@ -1,4 +1,4 @@
-(defproject clj-cassandra "0.1.1"
+(defproject clj-cassandra "0.1.2"
   :description "Clojure client for Apache Cassandra"
   :source-path "src/clj"
   :java-source-path "src/java"

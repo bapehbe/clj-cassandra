@@ -1,5 +1,5 @@
 Cassandra clojure client library.
-Inspired by clojure-cassandra project, while support new version of Cassandra (0.6.0-rc1).
+Inspired by clojure-cassandra project, while support new version of Cassandra (0.6.1).
 I take a different approach to implement it, so it does not share any code with clojure-cassandra project.
 
 == Idea ==
@@ -51,10 +51,10 @@ where encoder is a function take an object, transfer to byte[], and decoder does
 By default the client use clojure reader as encoder/decoder.
 
 == Consistent level ==
-You should specify the consistent level when defining keyspace with options r-level and w-level:
+You should specify the consistent level when defining keyspace with options read-level and write-level:
 
 For instance:
-(keyspace "Standard1" :r-level :quorom :w-level :one)
+(keyspace "Standard1" :read-level :quorom :write-level :one)
 
 == Collections & TimedUUID ==
 To support order preserved collection, client use TimedUUID as column key, but it is not
