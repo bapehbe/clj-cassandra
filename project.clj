@@ -1,4 +1,4 @@
-(defproject clj-cassandra "0.1.2"
+(defproject clj-cassandra "0.1.3"
   :description "Clojure client for Apache Cassandra"
   :source-path "src/clj"
   :java-source-path "src/java"
@@ -10,6 +10,6 @@
 		 [org.slf4j/slf4j-log4j12 "1.5.8"]
 		 [log4j "1.2.14"]
 		 [org.slf4j/slf4j-api "1.5.8"]]
-  :dev-dependencies [[leiningen/lein-swank "1.1.0"]
+  :dev-dependencies [[swank-clojure "1.2.1"]
 		     [org.clojars.mmcgrana/lein-clojars "0.5.0"]
 		     [org.clojars.mmcgrana/lein-javac "0.1.0"]])

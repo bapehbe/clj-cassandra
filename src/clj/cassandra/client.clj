@@ -15,10 +15,9 @@
   [host port]
   (let [t (TSocket. host port)
         p (TBinaryProtocol. t)]
-    (do (.open t)
-	(proxy [Cassandra$Client] [p]
-	  (transport [] t)
-	  (close [] (.close t))))))
+    (.open t)
+    (proxy [Cassandra$Client java.io.Closeable] [p]
+      (close [] (.close t)))))
 
 (defn key-space
   "Make a client connection and keyspace-name to specify a keyspace.
