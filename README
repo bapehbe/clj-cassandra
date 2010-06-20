@@ -30,13 +30,16 @@ or
 (def table (mk-cf-spec "localhost" 9160 "keyspace1" "Standard1"))
 
 ;; Get Attribute
-(get-attr table "foo")
+(get-attr table "foo" :hello)
 
 ;; Set attribute
 (set-attr! table "foo" :hello "world!")
 
 ;;Get Attributes (batch)
 (get-attrs table "foo" [:foo :bar])
+
+;;Get all attributes
+(get-attrs table "foo")
 
 ;;Set Attributes (Using Cassandra 0.6's batch mutation)
 (set-attrs! table "foo" {:foo "?" :bar "!"})
