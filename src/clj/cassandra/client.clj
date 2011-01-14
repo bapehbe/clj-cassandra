@@ -1,7 +1,7 @@
 (ns cassandra.client
   "The public client interfaces for Cassandra"
   (:use [cassandra.internal])
-  (:import [org.apache.thrift.transport TSocket]
+  (:import [org.apache.thrift.transport TFramedTransport TSocket]
 	   [org.apache.thrift.protocol TBinaryProtocol]
 	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn
 	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate NotFoundException]
@@ -13,7 +13,8 @@
    TODO for most server applications, we need connection pool,
    I am working on a generic connection pool."
   [host port]
-  (let [t (TSocket. host port)
+  (let [s (TSocket. host port)
+        t (TFramedTransport. s)
         p (TBinaryProtocol. t)]
     (.open t)
     (proxy [Cassandra$Client java.io.Closeable] [p]
@@ -29,6 +30,7 @@
 	key-decoder (get options :key-decoder decode)
 	r-level (get options :read-level :quorum)
 	w-level (get options :write-level :quorum)]
+    (.set_keyspace client keyspace-name)
     {:client client
      :name keyspace-name
      :encoder encoder
@@ -80,7 +82,7 @@
     pk super col]
      (try
       (let [cp (column-path encoder cf super col)
-	    column (.. client (get name pk cp read-level) (getColumn))]
+	    column (.. client (get (encode pk) cp read-level) (getColumn))]
 	(decoder (.getValue column)))
       (catch NotFoundException e nil))))
   
@@ -92,7 +94,7 @@
   (let [{:keys [#^Cassandra$Client client cf name encoder key-decoder decoder read-level]} cf-spec
 	key-decoder (if key-decoder key-decoder decoder)
 	cp (column-parent encoder cf nil)
-	cscs (.get_slice client name pk cp slice-pred read-level)]
+	cscs (.get_slice client (encoder pk) cp slice-pred read-level)]
     (apply array-map (mapcat #(extract-csc % key-decoder decoder) cscs))))
 
 (defn get-slice-by-names
@@ -128,17 +130,17 @@
   ([cf-spec pk super col val]
      (let [{:keys [#^Cassandra$Client client encoder name cf write-level]} cf-spec
 	   timestamp (now)
-	   val (encoder val)
-	   cp (column-path encoder cf super col)]
-       (.insert client name pk cp val timestamp write-level))))
+	   column (kv-to-column encoder col val timestamp)
+	   parent (column-parent encoder cf super)]
+       (.insert client (encoder pk) parent column write-level))))
 
 (defn batch-mutate*
   "Persitent mutations of pk in cf-spec.
    Use internally."
   [cf-spec pk mutations]
-  (let [{:keys [#^Cassandra$Client client name cf write-level]} cf-spec
-	muts {pk {cf (doall mutations)}}]
-    (.batch_mutate client name muts write-level)))
+  (let [{:keys [#^Cassandra$Client client encoder cf write-level]} cf-spec
+	muts {(encoder pk) {cf (doall mutations)}}]
+    (.batch_mutate client muts write-level)))
 
 (defn set-attrs!
   "Set attributes attrs of pk in column family cf-spec.
@@ -157,7 +159,7 @@
   ([cf-spec primary-key super-column column-name]
      (let [{:keys [#^Cassandra$Client client name cf encoder write-level]} cf-spec
 	   cp (column-path encoder cf super-column column-name)]
-       (.remove client name primary-key cp (now) write-level))))
+       (.remove client (encoder primary-key) cp (now) write-level))))
 
 (defn get-collection
   "Get attributes of primary-key from cf-spec, treat the key as Timed UUID."

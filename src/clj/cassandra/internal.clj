@@ -4,6 +4,7 @@
 	   [org.apache.thrift.protocol TBinaryProtocol]
 	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn KeyRange
 	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange]
+	   [java.nio ByteBuffer]
 	   [java.util UUID]
 	   [cassandra TimeUUID]))
 
@@ -14,9 +15,13 @@
 (defn encode
   "Default clojure encoder"
   [data]
-  (if (instance? UUID data)
-    (TimeUUID/asByteArray data)
-    (get-bytes (pr-str data))))
+  (let [bytes (if (instance? UUID data)
+                (TimeUUID/asByteArray data)
+                (get-bytes (pr-str data)))]
+    (ByteBuffer/wrap bytes)))
+
+(defn bytes-decode [bytes-buf]
+  (.array bytes-buf))
 
 (defn decode
   "Default clojure decode"
