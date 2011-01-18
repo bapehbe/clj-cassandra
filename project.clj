@@ -6,7 +6,7 @@
   :omit-default-repositories false
   :repositories {"eaio.com" "http://eaio.com/maven2"}
   :dependencies [[org.clojure/clojure-contrib "1.2.0"]
-		 [org.apache.cassandra/cassandra-all "0.7.0-rc4"]
+		 [org.apache.cassandra/cassandra-all "0.7.0"]
 		 [com.eaio.uuid/uuid "3.1"]
 		 [org.slf4j/slf4j-log4j12 "1.5.8"]
 		 [log4j "1.2.14"]
