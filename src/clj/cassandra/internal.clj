@@ -15,10 +15,12 @@
 (defn encode
   "Default clojure encoder"
   [data]
-  (let [bytes (if (instance? UUID data)
+  (if (instance? ByteBuffer data)
+    data
+    (let [bytes (if (instance? UUID data)
                 (TimeUUID/asByteArray data)
                 (get-bytes (pr-str data)))]
-    (ByteBuffer/wrap bytes)))
+      (ByteBuffer/wrap bytes))))
 
 (defn bytes-decode [bytes-buf]
   (.array bytes-buf))
