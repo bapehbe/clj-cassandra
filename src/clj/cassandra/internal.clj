@@ -35,14 +35,14 @@
   [bytes]
   (TimeUUID/toUUID bytes))
 
-(defmacro translate-level
+(defn translate-level
   "Translate level keywords to thrift.
    The available levels are:
      :zero :one :any :all :quorum :dcquorum :dcquorumsycn"
   [level]
-  `(let [levels# {:zero 0, :one 1, :any 6, :all 5, :quorum 2, :dcquorum 3, :dcquorumsync 4}
-	 lv# (get levels# ~level 1)]
-     (org.apache.cassandra.thrift.ConsistencyLevel/findByValue lv#)))
+  (let [levels {:zero 0, :one 1, :any 6, :all 5, :quorum 2, :dcquorum 3, :dcquorumsync 4}
+	 lv (get levels level 1)]
+     (org.apache.cassandra.thrift.ConsistencyLevel/findByValue lv)))
 
 (defn now
   []
