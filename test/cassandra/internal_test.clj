@@ -9,9 +9,9 @@
 	 {:foo "bar", 1 3, 1.25 :ok}
 	 #{"hello", nil, "world", :haha})))
 
-(deftest test-translate-operator 
-  (is (= IndexOperator/EQ  (translate-operator '=)))
-  (is (= IndexOperator/GTE (translate-operator '>=)))
-  (is (= IndexOperator/GT  (translate-operator '>)))
-  (is (= IndexOperator/LTE (translate-operator '<=)))
-  (is (= IndexOperator/LT  (translate-operator '<))))
+(deftest test-operator 
+  (is (= IndexOperator/EQ  (operator '=)))
+  (is (= IndexOperator/GTE (operator '>=)))
+  (is (= IndexOperator/GT  (operator '>)))
+  (is (= IndexOperator/LTE (operator '<=)))
+  (is (= IndexOperator/LT  (operator '<))))

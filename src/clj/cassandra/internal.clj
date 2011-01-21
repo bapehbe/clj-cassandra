@@ -160,7 +160,7 @@
       (.setEnd_key end-key)
       (.setCount count)))
 
-(defn translate-operator [operator]
+(defn operator [operator]
   (let [operators '{= 0, >= 1, > 2, <= 3, < 4}
         op (get operators operator)]
     (IndexOperator/findByValue op)))
