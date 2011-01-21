@@ -3,7 +3,7 @@
   (:import [org.apache.thrift.transport TSocket]
 	   [org.apache.thrift.protocol TBinaryProtocol]
 	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn KeyRange
-	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange]
+	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange IndexOperator]
 	   [java.nio ByteBuffer]
 	   [java.util UUID]
 	   [cassandra TimeUUID]))
@@ -159,3 +159,8 @@
       (.setStart_key start-key)
       (.setEnd_key end-key)
       (.setCount count)))
+
+(defn translate-operator [operator]
+  (let [operators '{= 0, >= 1, > 2, <= 3, < 4}
+        op (get operators operator)]
+    (IndexOperator/findByValue op)))
