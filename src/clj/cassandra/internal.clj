@@ -3,7 +3,8 @@
   (:import [org.apache.thrift.transport TSocket]
 	   [org.apache.thrift.protocol TBinaryProtocol]
 	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn KeyRange
-	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange IndexOperator IndexExpression IndexClause]
+	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange 
+            IndexOperator IndexExpression IndexClause KeySlice]
 	   [java.nio ByteBuffer]
 	   [java.util UUID]
 	   [cassandra TimeUUID]))
@@ -180,3 +181,8 @@
      (doseq [exp expressions]
        (.addToExpressions cl (expression exp)))
      cl)))
+
+(defn keyslice-to-map [#^KeySlice slice decoder]
+  (hash-map 
+    (decoder (.getKey slice))
+    (apply hash-map (mapcat #(extract-csc % decoder) (.getColumns slice)))))

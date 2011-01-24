@@ -56,8 +56,10 @@
        (set-attrs! table 'bsanderson {'full_name "Brandon Sanderson" 'state "UT"})
        (set-attrs! table 'prothfuss {'full_name "Patrick Rothfuss" 'state "WI"})
        (set-attrs! table 'htayler {'full_name "Howard Tayler" 'state "UT"})
-       (is (= 2 (count 
-                  (query-indexed table '[(= state "UT")] {}))))
+       (let [result (query-indexed table '[(= state "UT")] {})]
+         (is (= 2 (count result)))
+         (is (= (some #(= {'full_name "Brandon Sanderson" 'state "UT"} (get % 'bsanderson)) result)))
+         (is (= (some #(= {'full_name "Howard Tayler" 'state "UT"} (get % 'htayler)) result))))
        (remove-attr! table 'bsanderson)
        (remove-attr! table 'prothfuss)
        (remove-attr! table 'htayler)
