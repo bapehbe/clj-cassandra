@@ -44,3 +44,22 @@
 	    coll)
 	 [{:hello "world", :ok ":-)"}
 	  {:hello "moon", :ok ":-("}])))
+
+;http://www.datastax.com/blog/whats-new-cassandra-07-secondary-indexes
+;create column family users with comparator=UTF8Type 
+;  and column_metadata=[{column_name: full_name, validation_class: UTF8Type},
+;  {column_name: birth_date, validation_class: LongType, index_type: KEYS},
+;  {column_name: state, validation_class: UTF8Type, index_type: KEYS}];
+(deftest test-query-indexed
+   (with-open [client (mk-client "localhost" 9160)]
+     (let [table (-> client (key-space "demo") (column-family "users"))]
+       (set-attrs! table 'bsanderson {'full_name "Brandon Sanderson" 'state "UT"})
+       (set-attrs! table 'prothfuss {'full_name "Patrick Rothfuss" 'state "WI"})
+       (set-attrs! table 'htayler {'full_name "Howard Tayler" 'state "UT"})
+       (is (= 2 (count 
+                  (query-indexed table '[(= state "UT")] {}))))
+       (remove-attr! table 'bsanderson)
+       (remove-attr! table 'prothfuss)
+       (remove-attr! table 'htayler)
+       (is (= 0 (count 
+                  (query-indexed table '[(= state "UT")] {})))))))

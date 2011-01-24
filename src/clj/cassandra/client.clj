@@ -183,3 +183,11 @@
 	range (mk-key-range encoder key-range-spec)
 	slice (mk-slice-pred encoder slice-spec)]
     (.get_range_slices client name parent slice range read-level)))
+
+(defn query-indexed
+  [cf-spec query attr-spec]
+  (let [{:keys [name cf client encoder decoder read-level]} cf-spec
+	parent (column-parent encoder cf nil)
+        index_clause (clause query)
+	slice (mk-slice-pred encoder attr-spec)]
+    (.get_indexed_slices client parent index_clause slice read-level)))

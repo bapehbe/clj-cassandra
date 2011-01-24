@@ -3,7 +3,7 @@
   (:import [org.apache.thrift.transport TSocket]
 	   [org.apache.thrift.protocol TBinaryProtocol]
 	   [org.apache.cassandra.thrift Cassandra$Client ColumnPath SuperColumn KeyRange
-	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange IndexOperator IndexExpression]
+	    Column Mutation ColumnOrSuperColumn ColumnParent SlicePredicate SliceRange IndexOperator IndexExpression IndexClause]
 	   [java.nio ByteBuffer]
 	   [java.util UUID]
 	   [cassandra TimeUUID]))
@@ -167,3 +167,16 @@
 
 (defn expression [[op column value]]
   (IndexExpression. (encode column) (operator op) (encode value)))
+
+(def empty-start-key (make-array Byte/TYPE 0))
+
+(defn clause 
+  ([expressions] (clause expressions empty-start-key 100))
+  ([expressions start_key count]
+   (let [cl (IndexClause.)]
+     (doto cl
+       (.setStart_key start_key)
+       (.setCount count))
+     (doseq [exp expressions]
+       (.addToExpressions cl (expression exp)))
+     cl)))
